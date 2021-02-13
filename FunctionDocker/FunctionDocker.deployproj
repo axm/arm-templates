@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|AnyCPU">
+      <Configuration>Debug</Configuration>
+      <Platform>AnyCPU</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|AnyCPU">
+      <Configuration>Release</Configuration>
+      <Platform>AnyCPU</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>49d0b0a9-73f4-4a26-9984-ea6b57b8ada9</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PrepareForBuildDependsOn>
+    </PrepareForBuildDependsOn>
+  </PropertyGroup>
+  <Import Condition=" Exists('Deployment.targets') " Project="Deployment.targets" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+  <!-- vertag<:>start tokens<:>maj.min -->
+  <Import Condition=" Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets') " Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets" />
+  <!-- vertag<:>end -->
+  <ItemGroup>
+    <Content Include="azuredeploy.parameters.json" />
+    <Content Include="azuredeploy.json" />
+    <None Include="Deployment.targets">
+      <Visible>False</Visible>
+    </None>
+    <Content Include="Deploy-AzureResourceGroup.ps1" />
+    <Content Include="README.md" />
+    <Content Include="images\azsetsub.png" />
+    <Content Include="images\azlogin.png" />
+    <Content Include="images\aztemplate3.png" />
+    <Content Include="images\azdeploy.png" />
+    <Content Include="images\azdeployportal2.png" />
+    <Content Include="images\azportaldeploy2.png" />
+    <Content Include="images\azportaldeploy3.png" />
+    <Content Include="images\azportaldeploy.png" />
+    <Content Include="images\azdeploy2.png" />
+    <Content Include="images\azdeployportal.png" />
+    <Content Include="images\azdeploy3.png" />
+    <Content Include="GettingStarted-FuncApp.md" />
+    <Content Include="images\off.png" />
+    <Content Include="images\azgroup.png" />
+    <Content Include="images\aztemplate2.png" />
+  </ItemGroup>
+  <Target Name="GetReferenceAssemblyPaths" />
+</Project>
