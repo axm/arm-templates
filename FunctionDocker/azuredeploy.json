@@ -17,6 +17,9 @@
 		"pythonImage": {
 			"type": "string"
 		},
+		"powershellImage": {
+			"type": "string"
+		},
 		"envName": {
 			"type": "string"
 		}
@@ -27,7 +30,8 @@
 		"storageAccountName": "[concat('strgaxmarm', parameters('envName'))]",
 		"storageAccountid": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
 		"dotnetFunctionName": "[concat('dotnet-http-', parameters('envName'))]",
-		"pythonFunctionName": "[concat('python-http-', parameters('envName'))]"
+		"pythonFunctionName": "[concat('python-http-', parameters('envName'))]",
+		"powershellFunctionName": "[concat('powershell-http-', parameters('envName'))]"
 	},
 	"resources": [
 		//{
@@ -55,8 +59,8 @@
 				"reserved": true
 			},
 			"sku": {
-				"name": "P1v2",
-				"tier": "Premium"
+				"name": "S1",
+				"tier": "Standard"
 			}
 		},
 		//{
@@ -104,8 +108,8 @@
 				"siteConfig": {
 					"httpLoggingEnabled": true,
 					"logsDirectorySizeLimit": 50,
-					//"linuxFxVersion": "[concat('DOCKER|', parameters('dotnetImage'))]",
-					"linuxFxVersion": "DOCKER|axmacr.azurecr.io/dotnet-http:1",
+					"linuxFxVersion": "[concat('DOCKER|', parameters('dotnetImage'))]",
+					//"linuxFxVersion": "DOCKER|axmacr.azurecr.io/dotnet-http:1",
 					// "alwaysOn": true,
 					// "http20Enabled": true,
 					"appSettings": [
@@ -124,6 +128,117 @@
 						{
 							"name": "DOCKER_REGISTRY_SERVER_URL",
 							"value": "[concat('https://', parameters('dotnetImage'))]"
+						},
+						{
+							"name": "DOCKER_REGISTRY_SERVER_USERNAME",
+							"value": "[parameters('dockerRegistryUsername')]"
+						},
+						{
+							"name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+							"value": "[parameters('dockerRegistryPassword')]"
+						},
+						{
+							"name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+							"value": "false"
+						}
+					]
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Web/sites",
+			"apiVersion": "2018-11-01",
+			"name": "[variables('pythonFunctionName')]",
+			"kind": "functionapp,linux,container",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+				"[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+			],
+			"tags": {
+				"displayName": "Website"
+			},
+			"properties": {
+				"serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+				"clientAffinityEnabled": false,
+				"reserved": true,
+				"siteConfig": {
+					"httpLoggingEnabled": true,
+					"logsDirectorySizeLimit": 50,
+					"linuxFxVersion": "[concat('DOCKER|', parameters('pythonImage'))]",
+					//"linuxFxVersion": "DOCKER|axmacr.azurecr.io/python-http:1",
+					// "alwaysOn": true,
+					// "http20Enabled": true,
+					"appSettings": [
+						{
+							"name": "FUNCTIONS_WORKER_RUNTIME",
+							"value": "python"
+						},
+						{
+							"name": "FUNCTIONS_EXTENSION_VERSION",
+							"value": "~3"
+						},
+						{
+							"name": "AzureWebJobsStorage",
+							"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2019-06-01').keys[0].value)]"
+						},
+						{
+							"name": "DOCKER_REGISTRY_SERVER_URL",
+							"value": "[concat('https://', parameters('pythonImage'))]"
+						},
+						{
+							"name": "DOCKER_REGISTRY_SERVER_USERNAME",
+							"value": "[parameters('dockerRegistryUsername')]"
+						},
+						{
+							"name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+							"value": "[parameters('dockerRegistryPassword')]"
+						},
+						{
+							"name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+							"value": "false"
+						}
+					]
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Web/sites",
+			"apiVersion": "2018-11-01",
+			"name": "[variables('powershellFunctionName')]",
+			"kind": "functionapp,linux,container",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+				"[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+			],
+			"tags": {
+				"displayName": "Website"
+			},
+			"properties": {
+				"serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+				"clientAffinityEnabled": false,
+				"reserved": true,
+				"siteConfig": {
+					"httpLoggingEnabled": true,
+					"logsDirectorySizeLimit": 50,
+					"linuxFxVersion": "[concat('DOCKER|', parameters('powershellImage'))]",
+					"appSettings": [
+						{
+							"name": "FUNCTIONS_WORKER_RUNTIME",
+							"value": "powershell"
+						},
+						{
+							"name": "FUNCTIONS_EXTENSION_VERSION",
+							"value": "~3"
+						},
+						{
+							"name": "AzureWebJobsStorage",
+							"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2019-06-01').keys[0].value)]"
+						},
+						{
+							"name": "DOCKER_REGISTRY_SERVER_URL",
+							"value": "[concat('https://', parameters('powershellImage'))]"
 						},
 						{
 							"name": "DOCKER_REGISTRY_SERVER_USERNAME",

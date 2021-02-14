@@ -14,7 +14,7 @@ namespace dotnet_http
     {
         [FunctionName("dotnet_http")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
@@ -30,6 +30,14 @@ namespace dotnet_http
                 : $"Hello, {name}. This HTTP triggered function executed successfully.";
 
             return new OkObjectResult(responseMessage);
+        }
+
+        [FunctionName("healthcheck")]
+        public static async Task<IActionResult> Healthcheck(
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
+            ILogger log)
+        {
+            return new OkObjectResult("Healthy");
         }
     }
 }
