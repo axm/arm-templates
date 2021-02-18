@@ -25,6 +25,7 @@
 		}
 	},
 	"variables": {
+		"appInsightsName": "[concat('appinsights-', parameters('envName'))]",
 		"hostingPlanName": "[concat('hpn-', parameters('envName'))]",
 		"hostingPlanName2": "[concat('hpn-2-', parameters('envName'))]",
 		"storageAccountName": "[concat('strgaxmarm', parameters('envName'))]",
@@ -34,21 +35,17 @@
 		"powershellFunctionName": "[concat('powershell-http-', parameters('envName'))]"
 	},
 	"resources": [
-		//{
-		//	"type": "Microsoft.Web/serverfarms",
-		//	"apiVersion": "2018-02-01",
-		//	"name": "[variables('hostingPlanName')]",
-		//	"location": "[resourceGroup().location]",
-		//	"kind": "linux",
-		//	"properties": {
-		//		"reserved": true,
-		//		"maximumElasticWorkerCount": 1
-		//	},
-		//	"sku": {
-		//		"name": "P1V2",
-		//		"tier": "PremiumV2"
-		//	}
-		//},
+		{
+			"name": "[variables('appInsightsName')]",
+			"type": "Microsoft.Insights/components",
+			"apiVersion": "2015-05-01",
+			"location": "[resourceGroup().location]",
+			"tags": {},
+			"kind": "web",
+			"properties": {
+				"Application_Type": "web"
+			}
+		},
 		{
 			"type": "Microsoft.Web/serverfarms",
 			"apiVersion": "2018-02-01",
@@ -63,21 +60,6 @@
 				"tier": "Standard"
 			}
 		},
-		//{
-		//	"type": "Microsoft.Web/serverfarms",
-		//	"apiVersion": "2018-02-01",
-		//	"name": "[variables('hostingPlanName2')]",
-		//	"location": "[resourceGroup().location]",
-		//	"kind": "elastic",
-		//	"properties": {
-		//		"reserved": true,
-		//		"maximumElasticWorkerCount": 1
-		//	},
-		//	"sku": {
-		//		"name": "EP1",
-		//		"tier": "ElasticPremium"
-		//	}
-		//},
 		{
 			"type": "Microsoft.Storage/storageAccounts",
 			"name": "[variables('storageAccountName')]",
@@ -96,6 +78,7 @@
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+				"[resourceId('Microsoft.Insights/components/', variables('appInsightsName'))]",
 				"[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
 			],
 			"tags": {
@@ -110,8 +93,8 @@
 					"logsDirectorySizeLimit": 50,
 					"linuxFxVersion": "[concat('DOCKER|', parameters('dotnetImage'))]",
 					//"linuxFxVersion": "DOCKER|axmacr.azurecr.io/dotnet-http:1",
-					// "alwaysOn": true,
-					// "http20Enabled": true,
+					"alwaysOn": true,
+					"http20Enabled": true,
 					"appSettings": [
 						{
 							"name": "FUNCTIONS_WORKER_RUNTIME",
@@ -141,6 +124,7 @@
 							"name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
 							"value": "false"
 						}
+
 					]
 				}
 			}
@@ -167,8 +151,8 @@
 					"logsDirectorySizeLimit": 50,
 					"linuxFxVersion": "[concat('DOCKER|', parameters('pythonImage'))]",
 					//"linuxFxVersion": "DOCKER|axmacr.azurecr.io/python-http:1",
-					// "alwaysOn": true,
-					// "http20Enabled": true,
+					"alwaysOn": true,
+					"http20Enabled": true,
 					"appSettings": [
 						{
 							"name": "FUNCTIONS_WORKER_RUNTIME",
@@ -197,6 +181,18 @@
 						{
 							"name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
 							"value": "false"
+						},
+						{
+							"name": "timerSchedule",
+							"value": "0 */5 * * * *"
+						},
+						{
+							"name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+							"value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+						},
+						{
+							"name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+							"value": "[concat('InstrumentationKey=', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey)]"
 						}
 					]
 				}
@@ -223,6 +219,8 @@
 					"httpLoggingEnabled": true,
 					"logsDirectorySizeLimit": 50,
 					"linuxFxVersion": "[concat('DOCKER|', parameters('powershellImage'))]",
+					"alwaysOn": true,
+					"http20Enabled": true,
 					"appSettings": [
 						{
 							"name": "FUNCTIONS_WORKER_RUNTIME",
@@ -251,6 +249,14 @@
 						{
 							"name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
 							"value": "false"
+						},
+						{
+							"name": "timerSchedule",
+							"value": "0 */5 * * * *"
+						},
+						{
+							"name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+							"value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
 						}
 					]
 				}

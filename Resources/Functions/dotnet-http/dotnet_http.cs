@@ -32,12 +32,18 @@ namespace dotnet_http
             return new OkObjectResult(responseMessage);
         }
 
-        [FunctionName("healthcheck")]
+        [FunctionName("dotnet_healthcheck")]
         public static async Task<IActionResult> Healthcheck(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
             ILogger log)
         {
             return new OkObjectResult("Healthy");
+        }
+
+        [FunctionName("dotnet_timer")]
+        public static void RunTimer([TimerTrigger("%timerSchedule%")]TimerInfo myTimer, ILogger log)
+        {
+            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
         }
     }
 }

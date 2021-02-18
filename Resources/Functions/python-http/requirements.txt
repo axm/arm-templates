@@ -1,3 +1,5 @@
 # Do not include azure-functions-worker as it may conflict with the Azure Functions platform
 
 azure-functions
+opencensus==0.7.12
+opencensus-ext-azure==1.0.7

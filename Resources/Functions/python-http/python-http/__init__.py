@@ -1,10 +1,16 @@
 import logging
 
 import azure.functions as func
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+
+logger = logging.getLogger(__name__)
+logger.addHandler(AzureLogHandler())
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
+
+    logger.info('Python HTTP trigger for application insights')
 
     name = req.params.get('name')
     if not name:

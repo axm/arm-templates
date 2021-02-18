@@ -7,4 +7,4 @@ param (
 	$tag
 )
 
-docker build -t "axmacr.azurecr.io/$($imageName):$tag" .
+docker push "axmacr.azurecr.io/$($imageName):$tag"
