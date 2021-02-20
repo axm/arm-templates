@@ -1,0 +1,119 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+		"envName": {
+			"type": "string",
+            "defaultValue": "sfo"
+		}
+    },
+    "variables": {
+        "serviceBusName": "[concat('xyz-service-bus-', parameters('envName'))]",
+        "forwardingQueueName": "ForwardingQueue",
+        "forwardingTopicName": "ForwardingTopic",
+        "location": "[resourceGroup().location]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ServiceBus/namespaces",
+            "apiVersion": "2018-01-01-preview",
+            "name": "[variables('serviceBusName')]",
+            "location": "[variables('location')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "resources": [
+                {
+                    "type": "queues",
+                    "apiVersion": "2017-04-01",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusName'))]",
+                        "[resourceId('Microsoft.ServiceBus/namespaces/queues', variables('serviceBusName'), variables('forwardingQueueName'))]"
+                    ],
+                    "name": "ElementCreatedEvent",
+                    "properties": {
+                        "forwardTo": "[variables('forwardingQueueName')]"
+                    }
+                },
+                {
+                    "type": "queues",
+                    "apiVersion": "2017-04-01",
+                    "name": "[variables('forwardingQueueName')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusName'))]",
+                        "[resourceId('Microsoft.ServiceBus/namespaces/topics', variables('serviceBusName'), variables('forwardingTopicName'))]"
+                    ],
+                    "properties": {
+                        "forwardTo": "[variables('forwardingTopicName')]"
+                    }
+                },
+                {
+                    "type": "topics",
+                    "apiVersion": "2017-04-01",
+                    "name": "ElementDestroyedEvent",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusName'))]"
+                    ],
+                    "properties": {
+                    },
+                    "resources": [
+                        {
+                            "type": "subscriptions",
+                            "apiVersion": "2017-04-01",
+                            "name": "webhooks",
+                            "dependsOn": [
+                                "[resourceId('Microsoft.ServiceBus/namespaces/topics', variables('serviceBusName'), 'ElementDestroyedEvent')]"
+                            ],
+                            "properties": {
+
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "topics",
+                    "apiVersion": "2017-04-01",
+                    "name": "[variables('forwardingTopicName')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusName'))]"
+                    ],
+                    "properties": {
+                    },
+                    "resources": [
+                        {
+                            "type": "subscriptions",
+                            "apiVersion": "2017-04-01",
+                            "name": "consumers",
+                            "dependsOn": [
+                                "[resourceId('Microsoft.ServiceBus/namespaces/topics', variables('serviceBusName'), variables('forwardingTopicName'))]"
+                            ],
+                            "properties": {
+                            }
+                        },
+                        {
+                            "type": "subscriptions",
+                            "apiVersion": "2017-04-01",
+                            "name": "internal",
+                            "dependsOn": [
+                                "[resourceId('Microsoft.ServiceBus/namespaces/topics', variables('serviceBusName'), variables('forwardingTopicName'))]"
+                            ],
+                            "properties": {
+                            }
+                        },
+                        {
+                            "type": "subscriptions",
+                            "apiVersion": "2017-04-01",
+                            "name": "clients",
+                            "dependsOn": [
+                                "[resourceId('Microsoft.ServiceBus/namespaces/topics', variables('serviceBusName'), variables('forwardingTopicName'))]"
+                            ],
+                            "properties": {
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "outputs": {}
+}
