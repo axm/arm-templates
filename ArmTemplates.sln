@@ -13,6 +13,10 @@ Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "Functions", "Functions\Func
 EndProject
 Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "FunctionDocker", "FunctionDocker\FunctionDocker.deployproj", "{49D0B0A9-73F4-4A26-9984-EA6B57B8ADA9}"
 EndProject
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "FunctionsKeyVault", "FunctionsKeyVault\FunctionsKeyVault.deployproj", "{849AACE7-03C7-4480-B1D5-8EE77F7AD65E}"
+EndProject
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "ServiceBusQueuesAndTopics", "ServiceBusQueuesAndTopics\ServiceBusQueuesAndTopics.deployproj", "{225EB524-38D1-4A9F-AD22-10936E4902D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{49D0B0A9-73F4-4A26-9984-EA6B57B8ADA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49D0B0A9-73F4-4A26-9984-EA6B57B8ADA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49D0B0A9-73F4-4A26-9984-EA6B57B8ADA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{849AACE7-03C7-4480-B1D5-8EE77F7AD65E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{849AACE7-03C7-4480-B1D5-8EE77F7AD65E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{849AACE7-03C7-4480-B1D5-8EE77F7AD65E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{849AACE7-03C7-4480-B1D5-8EE77F7AD65E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{225EB524-38D1-4A9F-AD22-10936E4902D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{225EB524-38D1-4A9F-AD22-10936E4902D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{225EB524-38D1-4A9F-AD22-10936E4902D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{225EB524-38D1-4A9F-AD22-10936E4902D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

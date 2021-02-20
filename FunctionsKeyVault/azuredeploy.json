@@ -1,0 +1,193 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dockerRegistryUrl": {
+            "type": "string"
+        },
+        "dockerRegistryUsername": {
+            "type": "string"
+        },
+        "dockerRegistryPassword": {
+            "type": "string"
+        },
+        "dotnetImage": {
+            "type": "string"
+        },
+        "enabledForDeployment": {
+            "type": "bool",
+            "defaultValue": false
+        },
+        "enabledForDiskEncryption": {
+            "type": "bool",
+            "defaultValue": false
+        },
+        "enabledForTemplateDeployment": {
+            "type": "bool",
+            "defaultValue": false
+        },
+        "skuName": {
+            "type": "string",
+            "defaultValue": "Standard"
+        },
+        "envName": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "tenantId": "[subscription().tenantId]",
+        "keyVaultName": "[concat('axm-my-kv', parameters('envName'))]",
+        "appInsightsName": "[concat('appinsights-', parameters('envName'))]",
+        "hostingPlanName": "[concat('hpn-', parameters('envName'))]",
+        "storageAccountName": "[concat('strgaxmarm', parameters('envName'))]",
+        "storageAccountid": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+        "dotnetFunctionName": "[concat('dotnet-http-', parameters('envName'))]",
+        "appSettingsName": "[concat('axmappsettings-', parameters('envName'))]",
+        "instrumentationKeySecretName": "instrumentation-key"
+    },
+    "resources": [
+        {
+            "name": "[variables('appInsightsName')]",
+            "type": "Microsoft.Insights/components",
+            "apiVersion": "2015-05-01",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "kind": "web",
+            "properties": {
+                "Application_Type": "web"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-02-01",
+            "name": "[variables('hostingPlanName')]",
+            "location": "[resourceGroup().location]",
+            "kind": "linux",
+            "properties": {
+                "reserved": true
+            },
+            "sku": {
+                "name": "S1",
+                "tier": "Standard"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "apiVersion": "2019-06-01",
+            "location": "[resourceGroup().location]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-11-30",
+            "name": "[variables('dotnetFunctionName')]",
+            "kind": "functionapp,linux,container",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+                "[resourceId('Microsoft.Insights/components/', variables('appInsightsName'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "tags": {
+                "displayName": "Website"
+            },
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+                "clientAffinityEnabled": false,
+                "reserved": true,
+                "siteConfig": {
+                    "httpLoggingEnabled": true,
+                    "logsDirectorySizeLimit": 50,
+                    "linuxFxVersion": "[concat('DOCKER|', parameters('dotnetImage'))]",
+                    "alwaysOn": true,
+                    "http20Enabled": true,
+                    "appSettings": [
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "type": "config",
+                    "apiVersion": "2018-11-01",
+                    "name": "[variables('appSettingsName')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', variables('dotnetFunctionName'))]",
+                        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+                        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('instrumentationKeySecretName'))]"
+                    ],
+                    "properties": {
+                        "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+                        "FUNCTIONS_EXTENSION_VERSION": "~3",
+                        "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2019-06-01').keys[0].value)]",
+                        "DOCKER_REGISTRY_SERVER_URL": "[concat('https://', parameters('dotnetImage'))]",
+                        "DOCKER_REGISTRY_SERVER_USERNAME": "[parameters('dockerRegistryUsername')]",
+                        "DOCKER_REGISTRY_SERVER_PASSWORD": "[parameters('dockerRegistryPassword')]",
+                        "WEBSITES_ENABLE_APP_SERVICE_STORAGE": "false",
+                        "APPINSIGHTS_INSTRUMENTATIONKEY": "[concat('@Microsoft.KeyVault(VaultName=', variables('keyVaultName'), ';SecretName=', variables('instrumentationKeySecretName'), ')')]"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2016-10-01",
+            "name": "[variables('keyVaultName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "enabledForDeployment": "[parameters('enabledForDeployment')]",
+                "enabledForDiskEncryption": "[parameters('enabledForDiskEncryption')]",
+                "enabledForTemplateDeployment": "[parameters('enabledForTemplateDeployment')]",
+                "tenantId": "[variables('tenantId')]",
+                "accessPolicies": [
+                    {
+                        "tenantId": "[reference(concat('Microsoft.Web/sites/',  variables('dotnetFunctionName'), '/providers/Microsoft.ManagedIdentity/Identities/default'), '2018-11-01').tenantId]",
+                        "objectId": "[reference(concat('Microsoft.Web/sites/',  variables('dotnetFunctionName'), '/providers/Microsoft.ManagedIdentity/Identities/default'), '2018-11-01').principalId]",
+                        "permissions": {
+                            "secrets": [ "get" ]
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "[parameters('skuName')]",
+                    "family": "A"
+                },
+                "networkAcls": {
+                    "defaultAction": "Allow",
+                    "bypass": "AzureServices"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2016-10-01",
+            "name": "[concat(variables('keyVaultName'), '/tenandId')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+            ],
+            "properties": {
+                "value": "[variables('tenantId')]"
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2016-10-01",
+            "name": "[concat(variables('keyVaultName'), '/', variables('instrumentationKeySecretName'))]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+                "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]"
+            ],
+            "properties": {
+                "value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+            }
+        }
+    ]
+}
